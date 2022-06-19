@@ -24,7 +24,7 @@ struct player {
     UBYTE hand[6];
     UBYTE selectedToPlay[6];
     UBYTE penaltyPoints;
-    BOOL PCturn;  // if true its time for PC opponent to play
+    UBYTE PCturn;  // if true its time for PC opponent to play
 };
 
 #endif

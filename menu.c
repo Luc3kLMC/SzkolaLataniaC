@@ -10,7 +10,7 @@
 #include <ace/managers/rand.h>
 #include "structures.h"
 
-#define PC_NO_PLAY = 3
+#define PC_NO_PLAY 3
 
 static tView *s_pView;
 static tVPort *s_pVp;
@@ -65,9 +65,38 @@ UBYTE inDeckPosition = 0; // not removing elements from deck array, so will be c
 BOOL wasKeyPressed = FALSE; // everytime when selecting card to play (or remove selection)
 						//  display will be updated
 
+void waitFrames(tVPort *pVPort, UBYTE ubHowMany)
+{
+  for (UBYTE i = 0; i < ubHowMany; ++i)
+  {
+    viewProcessManagers(pVPort->pView);
+    copProcessBlocks();
+    vPortWaitForEnd(pVPort);
+  }
+}
+
 void clearScreen (void){
 	blitRect(s_pVpManager->pBack, 0, 0, 320, 128, 0);
     blitRect(s_pVpManager->pBack, 0, 128, 320, 128, 0);
+}
+
+void gameOverCheck(void){
+	UBYTE emptyHandsCheck = 0;
+	for (UBYTE i = 0; i < 6; ++i){
+		if (p1.hand[i] == 0){
+			++emptyHandsCheck;
+		}
+	}
+	for (UBYTE i = 0; i < 6; ++i){
+		if (p2.hand[i] == 0){
+			++emptyHandsCheck;
+		}
+	}
+	if (emptyHandsCheck == 12){
+		printMenuOnce = FALSE;
+		game = FALSE;
+		gameover = TRUE;
+	}
 }
 
 void displayMessage(char *text, UBYTE dstY, UBYTE height){
@@ -434,6 +463,122 @@ void checkCorrectPlay(void){
 
 }
 
+void sortOpponentHand(){
+	for (UBYTE i = 0; i < 6; ++i) 
+        {
+            for (UBYTE j = i + 1; j < 6; ++j)
+            {
+                if (p2.hand[i] > p2.hand[j]) 
+                {
+                    UBYTE hold =  p2.hand[i];
+                    p2.hand[i] = p2.hand[j];
+                    p2.hand[j] = hold;
+                }
+            }
+        }
+}
+
+void opponentPlayOnStackDisplay(UBYTE value){
+	stack.stackDisplayX += 20;
+	switch (value){
+			case 2:
+				blitCopy(s_pCard2, 0,0, s_pVpManager->pBack, stack.stackDisplayX, stack.stackDisplayY, 32, 48, MINTERM_COOKIE);
+			break;
+			case 3:
+				blitCopy(s_pCard3, 0,0, s_pVpManager->pBack, stack.stackDisplayX, stack.stackDisplayY, 32, 48, MINTERM_COOKIE);
+			break;
+			case 4:
+				blitCopy(s_pCard4, 0,0, s_pVpManager->pBack, stack.stackDisplayX, stack.stackDisplayY, 32, 48, MINTERM_COOKIE);
+			break;
+			case 5:
+				blitCopy(s_pCard5, 0,0, s_pVpManager->pBack, stack.stackDisplayX, stack.stackDisplayY, 32, 48, MINTERM_COOKIE);
+			break;
+			case 6:
+				blitCopy(s_pCard6, 0,0, s_pVpManager->pBack, stack.stackDisplayX, stack.stackDisplayY, 32, 48, MINTERM_COOKIE);
+			break;
+			case 7:
+				blitCopy(s_pCard7, 0,0, s_pVpManager->pBack, stack.stackDisplayX, stack.stackDisplayY, 32, 48, MINTERM_COOKIE);
+			break;
+			case 8:
+				blitCopy(s_pCard8, 0,0, s_pVpManager->pBack, stack.stackDisplayX, stack.stackDisplayY, 32, 48, MINTERM_COOKIE);
+			break;
+			case 9:
+				blitCopy(s_pCard9, 0,0, s_pVpManager->pBack, stack.stackDisplayX, stack.stackDisplayY, 32, 48, MINTERM_COOKIE);
+			break;
+			case 10:
+				blitCopy(s_pCard10, 0,0, s_pVpManager->pBack, stack.stackDisplayX, stack.stackDisplayY, 32, 48, MINTERM_COOKIE);
+			break;
+			case 11:
+				blitCopy(s_pCard11, 0,0, s_pVpManager->pBack, stack.stackDisplayX, stack.stackDisplayY, 32, 48, MINTERM_COOKIE);
+			break;
+			case 12:
+				blitCopy(s_pCard12, 0,0, s_pVpManager->pBack, stack.stackDisplayX, stack.stackDisplayY, 32, 48, MINTERM_COOKIE);
+			break;
+			case 13:
+				blitCopy(s_pCard13, 0,0, s_pVpManager->pBack, stack.stackDisplayX, stack.stackDisplayY, 32, 48, MINTERM_COOKIE);
+			break;	
+		}
+}
+
+void PCAi(void){
+	BOOL noPossiblePlayPC = TRUE;
+	sortOpponentHand();
+	waitFrames(s_pVp, 10);
+	for (UBYTE i = 0; i < 6; ++i){
+		if (p2.hand[i] > stack.value){
+			stack.count += 1;
+			UBYTE PCplayedCardValue = p2.hand[i];
+			stack.value = p2.hand[i];
+			if (inDeckPosition < 51){
+				p2.hand[i] = ArrayOfCards[inDeckPosition];
+				++inDeckPosition;
+			}
+			else {
+				p2.hand[i] = 0;
+			}
+			opponentPlayOnStackDisplay(PCplayedCardValue);
+			noPossiblePlayPC = FALSE;
+			return;
+		}
+	}
+	for (UBYTE i = 0; i < 5; ++i){
+		if (p2.hand[i] == p2.hand[i+1]){
+			UBYTE twoCards = p2.hand[i] + p2.hand[i+1];
+			if (twoCards > stack.value){
+				stack.count += 2;
+				stack.value = twoCards;
+				UBYTE PCplayedCardValue = p2.hand[i];
+				if (inDeckPosition < 51){
+					p2.hand[i] = ArrayOfCards[inDeckPosition];
+					++inDeckPosition;	
+				}
+				else {
+					p2.hand[i] = 0;
+				}
+				if (inDeckPosition < 51){
+					p2.hand[i+1] = ArrayOfCards[inDeckPosition];
+					++inDeckPosition;	
+				}
+				else {
+					p2.hand[i+1] = 0;
+				}
+				opponentPlayOnStackDisplay(PCplayedCardValue);
+				opponentPlayOnStackDisplay(PCplayedCardValue);
+				noPossiblePlayPC = FALSE;
+				return;
+			}
+		}
+	}
+	if (noPossiblePlayPC == TRUE){
+		p2.penaltyPoints += stack.count;
+		stack.value = 0;
+		stack.count = 0;
+		clearStackDisplay();
+		displayHUDinfo();
+		p2.PCturn = PC_NO_PLAY;
+	}
+}
+
 void stateMenuCreate(void){
 	s_pView = viewCreate(0,
 		TAG_VIEW_COPLIST_MODE, COPPER_MODE_BLOCK,
@@ -571,6 +716,14 @@ void stateMenuLoop(void){
 		if(keyUse(KEY_RETURN)){
 			checkCorrectPlay();
 			displayHUDinfo();
+			if (p2.PCturn == TRUE){
+				PCAi();
+			if (p2.PCturn == PC_NO_PLAY){
+				PCAi();
+			}
+			p2.PCturn = FALSE;
+			}
+			gameOverCheck();
 			return;
 		}
 
@@ -582,13 +735,49 @@ void stateMenuLoop(void){
 
 	}
 
-	if (p2.PCturn == TRUE){
-		PCAi();
-		if (p2.PCturn == PC_NO_PLAY){
-			PCAi();
+	while (gameover == TRUE){
+		if (printMenuOnce == FALSE){
+			clearScreen();
+			sprintf(s_pText, "Game over!");
+			fontFillTextBitMap(s_pFont, s_pBmText, s_pText);
+			fontDrawTextBitMap(s_pVpManager->pBack, s_pBmText, 2, 16, 3, FONT_COOKIE);
+			
+			sprintf(s_pText, "Player 1 penalty points: %d", p1.penaltyPoints);
+			fontFillTextBitMap(s_pFont, s_pBmText, s_pText);
+			fontDrawTextBitMap(s_pVpManager->pBack, s_pBmText, 2, 24, 3, FONT_COOKIE);
+			sprintf(s_pText, "Player 2 penalty points: %d", p2.penaltyPoints);
+			fontFillTextBitMap(s_pFont, s_pBmText, s_pText);
+			fontDrawTextBitMap(s_pVpManager->pBack, s_pBmText, 2, 32, 3, FONT_COOKIE);
+			
+			if (p1.penaltyPoints < p2.penaltyPoints){
+			sprintf(s_pText, "YOU WIN !");
+			}
+			else if (p1.penaltyPoints > p2.penaltyPoints){
+			sprintf(s_pText, "YOU LOST !");
+			}
+			if (p1.penaltyPoints == p2.penaltyPoints){
+			sprintf(s_pText, "STALEMATE !");
+			}
+			fontFillTextBitMap(s_pFont, s_pBmText, s_pText);
+			fontDrawTextBitMap(s_pVpManager->pBack, s_pBmText, 2, 40, 3, FONT_COOKIE);
+
+			sprintf(s_pText, "Press Return to continue.");
+			fontFillTextBitMap(s_pFont, s_pBmText, s_pText);
+			fontDrawTextBitMap(s_pVpManager->pBack, s_pBmText, 2, 48, 3, FONT_COOKIE);
+			printMenuOnce = TRUE;
 		}
-		p2.PCturn = FALSE;
+
+		joyProcess();
+		keyProcess();
+
+		if(keyUse(KEY_RETURN)){
+			printMenuOnce = FALSE;
+			gameover = FALSE;
+			menu = TRUE;
+		}
 	}
+
+	
 	
 	viewProcessManagers(s_pView);
 	copProcessBlocks();
