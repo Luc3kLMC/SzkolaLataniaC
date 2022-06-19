@@ -72,7 +72,7 @@ void stateMenuCreate(void){
 	//bitmapLoadFromFile(s_pVpManager->pBack, "data/title.bm", 0, 0);
 	sprintf(s_pText, "Menu, shuflling. Press RETURN to start.");
   	fontFillTextBitMap(s_pFont, s_pBmText, s_pText);
-  	fontDrawTextBitMap(s_pVpManager->pBack, s_pBmText, 2, 2, 2, FONT_COOKIE);
+  	fontDrawTextBitMap(s_pVpManager->pBack, s_pBmText, 12, 12, 6, FONT_COOKIE);
 
 	randInit(461);
 	joyOpen();
