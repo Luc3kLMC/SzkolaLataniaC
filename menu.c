@@ -581,6 +581,14 @@ void stateMenuLoop(void){
 		}
 
 	}
+
+	if (p2.PCturn == TRUE){
+		PCAi();
+		if (p2.PCturn == PC_NO_PLAY){
+			PCAi();
+		}
+		p2.PCturn = FALSE;
+	}
 	
 	viewProcessManagers(s_pView);
 	copProcessBlocks();
@@ -590,6 +598,18 @@ void stateMenuLoop(void){
 void stateMenuDestroy(void){
 	systemUse();
 	viewDestroy(s_pView);
+	bitmapDestroy(s_pCard2);
+	bitmapDestroy(s_pCard3);
+	bitmapDestroy(s_pCard4);
+	bitmapDestroy(s_pCard5);
+	bitmapDestroy(s_pCard6);
+	bitmapDestroy(s_pCard7);
+	bitmapDestroy(s_pCard8);
+	bitmapDestroy(s_pCard9);
+	bitmapDestroy(s_pCard10);
+	bitmapDestroy(s_pCard11);
+	bitmapDestroy(s_pCard12);
+	bitmapDestroy(s_pCard13);
 	joyClose();
 	keyDestroy();
 }
